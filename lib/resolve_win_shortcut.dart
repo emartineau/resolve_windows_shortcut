@@ -181,7 +181,7 @@ String _getNullTerminatedString(Uint8List bytes, int offset) {
 }
 
 /// Get the extension of the given file path if it exists
-String _getPathExtension(String path) => path.length > 3 ? path.split('.').last : '';
+String _getPathExtension(String path) => path.split(RegExp(r'[/\\]')).last.split('.').last;
 
 /// Compares 2 lists for equality in elements (via ==) and order
 bool _listEquals(List a, List b) {
