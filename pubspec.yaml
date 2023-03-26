@@ -1,5 +1,5 @@
 name: resolve_windows_shortcut
-description: A starting point for Dart libraries or applications.
+description: Resolve target paths of Windows Shortcut (.lnk) files.
 version: 1.0.0
 repository: https://github.com/emartineau/resolve_windows_shortcut
 
