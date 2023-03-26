@@ -23,10 +23,15 @@ extension ResolvableDirectory on Directory {
   /// point to directories or are directories themselves
   Future<bool> hasSubDirectory() async {
     await for (final entity in list(recursive: false)) {
-      if (entity is Directory ||
-          _getPathExtension(entity.path) == 'lnk' &&
-              await (entity as File).resolveIfShortcut(targetType: FileSystemEntityType.directory) != null) {
-        return true;
+      if (entity is Directory) return true;
+      if (_getPathExtension(entity.path) == 'lnk') {
+        try {
+          await (entity as File).resolveIfShortcut(targetType: ShortcutResolverEntityType.directory);
+          // if no error, a target path was found
+          return true;
+        } catch (e) {
+          return false;
+        }
       }
     }
     return false;
@@ -34,18 +39,18 @@ extension ResolvableDirectory on Directory {
 
   /// Lists the contents of the directory with any functioning links resolved
   Stream<FileSystemEntity> listWithResolvedShortcuts(
-      {FileSystemEntityType fsEntityType = FileSystemEntityType.any, bool recursive = false}) async* {
+      {ShortcutResolverEntityType resolverEntityType = ShortcutResolverEntityType.any, bool recursive = false}) async* {
     await for (final FileSystemEntity entity in list()) {
       if (entity is File && _getPathExtension(entity.path) == 'lnk') {
         Directory resolvedDir =
-            Directory((await Future<String?>(() => entity.resolveIfShortcut(targetType: fsEntityType)) ?? ''));
+            Directory((await Future<String?>(() => entity.resolveIfShortcut(targetType: resolverEntityType)) ?? ''));
         if (resolvedDir.path.isEmpty || !resolvedDir.existsSync()) continue;
         if (recursive) {
-          yield* resolvedDir.listWithResolvedShortcuts(fsEntityType: fsEntityType, recursive: recursive);
+          yield* resolvedDir.listWithResolvedShortcuts(resolverEntityType: resolverEntityType, recursive: recursive);
         }
         yield resolvedDir;
       } else if (entity is Directory && recursive) {
-        yield* entity.listWithResolvedShortcuts(fsEntityType: fsEntityType, recursive: recursive);
+        yield* entity.listWithResolvedShortcuts(resolverEntityType: resolverEntityType, recursive: recursive);
       } else {
         yield entity;
       }

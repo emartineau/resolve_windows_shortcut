@@ -26,7 +26,7 @@ const shellLinkGuidHexList = [
   0x46
 ];
 
-/// A file system entity type that can be resolved from a shortcut.
+/// A file system entity type that can be resolved from a Shell Link.
 enum ShortcutResolverEntityType { file, directory, any }
 
 class ShortcutResolver {
