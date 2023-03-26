@@ -6,18 +6,16 @@ import 'package:test/test.dart';
 void main() {
   group('Shortcut Resolver Tests', () {
     test('ASCII file path', () async {
-      assert(await ShortcutResolver.resolveTarget(await File('test_file.lnk').readAsBytes()) == "C:\\test\\a.txt");
+      assert(ShortcutResolver.resolveTarget(await File('test_file.lnk').readAsBytes()) == "C:\\test\\a.txt");
     });
     test('ASCII folder path', () async {
-      assert(await ShortcutResolver.resolveTarget(await File('test_folder.lnk').readAsBytes()) == "C:\\test");
+      assert(ShortcutResolver.resolveTarget(await File('test_folder.lnk').readAsBytes()) == "C:\\test");
     });
     test('Unicode file path', () async {
-      assert(
-          await ShortcutResolver.resolveTarget(await File('test_unicode_file.lnk').readAsBytes()) == "C:\\test\\☆.txt");
+      assert(ShortcutResolver.resolveTarget(await File('test_unicode_file.lnk').readAsBytes()) == "C:\\test\\☆.txt");
     });
     test('Unicode folder path', () async {
-      assert(
-          await ShortcutResolver.resolveTarget(await File('test_unicode_folder.lnk').readAsBytes()) == "C:\\test\\☆");
+      assert(ShortcutResolver.resolveTarget(await File('test_unicode_folder.lnk').readAsBytes()) == "C:\\test\\☆");
     });
   });
 }

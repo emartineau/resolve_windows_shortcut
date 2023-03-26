@@ -3,48 +3,8 @@
 /// Implemented based on [the open spec of Shell Links.](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/16cb4ca1-9339-4d0c-a68d-bf1d6cc0f943)
 library resolve_win_shortcut;
 
-export 'src/resolve_win_shortcut_base.dart';
-
 import 'dart:io';
 import 'dart:typed_data';
-
-extension ResolvableDirectory on Directory {
-  /// Determines if the directory contains any entities that
-  /// point to directories or are directories themselves
-  Future<bool> hasSubDirectory() async {
-    await for (final entity in list(recursive: false)) {
-      if (entity is Directory ||
-          _getPathExtension(entity.path) == 'lnk' &&
-              await (entity as File).resolveIfShortcut(targetType: FileSystemEntityType.directory) != null) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /// Lists the contents of the directory with any functioning links resolved
-  Stream<FileSystemEntity> listWithResolvedShortcuts(
-      {FileSystemEntityType fsEntityType = FileSystemEntityType.any, bool recursive = false}) async* {
-    await for (final FileSystemEntity entity in list()) {
-      if (entity is File && _getPathExtension(entity.path) == 'lnk') {
-        Directory resolvedDir =
-            Directory((await Future<String?>(() => entity.resolveIfShortcut(targetType: fsEntityType)) ?? ''));
-        if (resolvedDir.path.isEmpty || !resolvedDir.existsSync()) continue;
-        if (recursive) {
-          yield* resolvedDir.listWithResolvedShortcuts(fsEntityType: fsEntityType, recursive: recursive);
-        }
-        yield resolvedDir;
-      } else if (entity is Directory && recursive) {
-        yield* entity.listWithResolvedShortcuts(fsEntityType: fsEntityType, recursive: recursive);
-      } else {
-        yield entity;
-      }
-    }
-  }
-
-  /// Get the extension of the given file path if it exists
-  String _getPathExtension(String path) => path.split(RegExp(r'[/\\]')).last.split('.').last;
-}
 
 /// Unique Identifier for Shell Link files in byte array form
 const shellLinkGuidHexList = [
@@ -69,12 +29,11 @@ const shellLinkGuidHexList = [
 enum FileSystemEntityType { file, directory, any }
 
 class ShortcutResolver {
-  /// Resolves the target path linked by the Shell Link (Windows Shortcut) file
-  /// [targetType] will only resolve if the path points to the given type
+  /// Resolves the target path linked by the Shell Link (Windows Shortcut) file.
+  /// The [targetType] argument restricts what types of paths can be resolved.
   ///
-  /// Throws an [ArgumentError] on failure
-  static Future<String?> resolveTarget(Uint8List bytes,
-      {FileSystemEntityType targetType = FileSystemEntityType.any}) async {
+  /// Throws an [ArgumentError] on failure.
+  static String resolveTarget(Uint8List bytes, {FileSystemEntityType targetType = FileSystemEntityType.any}) {
     // Shortcuts should be at least this long
     if (bytes.lengthInBytes < 0xff) throw ArgumentError('More data needed to attempt path resolution');
 
@@ -123,8 +82,19 @@ class ShortcutResolver {
 }
 
 extension ResolvableFile on File {
-  Future<String?> resolveIfShortcut({FileSystemEntityType targetType = FileSystemEntityType.any}) async =>
+  /// Resolves the target path linked by the Shell Link (Windows Shortcut) file
+  /// [targetType] will only resolve if the path points to the given type
+  ///
+  /// Throws an [ArgumentError] on failure.
+  Future<String> resolveIfShortcut({FileSystemEntityType targetType = FileSystemEntityType.any}) async =>
       ShortcutResolver.resolveTarget(await readAsBytes(), targetType: targetType);
+
+  /// Resolves the target path linked by the Shell Link (Windows Shortcut) file
+  /// [targetType] will only resolve if the path points to the given type
+  ///
+  /// Throws an [ArgumentError] on failure.
+  String resolveIfShortcutSync({FileSystemEntityType targetType = FileSystemEntityType.any}) =>
+      ShortcutResolver.resolveTarget(readAsBytesSync(), targetType: targetType);
 }
 
 /// Parses the target the list of bytes beginning at the given offset.

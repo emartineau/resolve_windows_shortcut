@@ -1,39 +1,64 @@
-<!-- 
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+This package lets you resolve target paths of Windows Shortcut (.lnk) files.
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages). 
+## Getting Started
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages). 
--->
+Add `resolve_win_shortcut` as a depenency to `pubspec.yaml`.
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
-
-## Features
-
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
+## Basic Usage
 
 ```dart
-const like = 'sample';
+import 'package:resolve_win_shortcut/resolve_win_shortcut.dart';
+
+final File shortcut = File('C:\\ShortcutPath.lnk');
+final String resolvedShortcutPath = shortcut.resolveIfShortcut();
+// OR
+final String resolvedShortcutPath = resolveTartget(shortcut.readAsBytesSync());
+```
+
+## Sample Directory Extension Code
+
+```dart
+extension ResolvableDirectory on Directory {
+  /// Determines if the directory contains any entities that
+  /// point to directories or are directories themselves
+  Future<bool> hasSubDirectory() async {
+    await for (final entity in list(recursive: false)) {
+      if (entity is Directory ||
+          _getPathExtension(entity.path) == 'lnk' &&
+              await (entity as File).resolveIfShortcut(targetType: FileSystemEntityType.directory) != null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Lists the contents of the directory with any functioning links resolved
+  Stream<FileSystemEntity> listWithResolvedShortcuts(
+      {FileSystemEntityType fsEntityType = FileSystemEntityType.any, bool recursive = false}) async* {
+    await for (final FileSystemEntity entity in list()) {
+      if (entity is File && _getPathExtension(entity.path) == 'lnk') {
+        Directory resolvedDir =
+            Directory((await Future<String?>(() => entity.resolveIfShortcut(targetType: fsEntityType)) ?? ''));
+        if (resolvedDir.path.isEmpty || !resolvedDir.existsSync()) continue;
+        if (recursive) {
+          yield* resolvedDir.listWithResolvedShortcuts(fsEntityType: fsEntityType, recursive: recursive);
+        }
+        yield resolvedDir;
+      } else if (entity is Directory && recursive) {
+        yield* entity.listWithResolvedShortcuts(fsEntityType: fsEntityType, recursive: recursive);
+      } else {
+        yield entity;
+      }
+    }
+  }
+
+  /// Get the extension of the given file path if it exists
+  String _getPathExtension(String path) => path.split(RegExp(r'[/\\]')).last.split('.').last;
+}
 ```
 
 ## Additional information
 
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
+_Tested on shortcuts made in Windows 10 21H2_
+
+Comments in this package refer to Windows Shortcuts as Shell Links.
