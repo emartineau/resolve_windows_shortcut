@@ -7,26 +7,26 @@ class ShortcutTestData {
   final String testTitle;
   final String shortcutPath;
   final String targetPath;
-  final FileSystemEntityType targetType;
+  final ShortcutResolverEntityType targetType;
   const ShortcutTestData(this.testTitle, this.shortcutPath, this.targetPath, this.targetType);
 }
 
 void main() {
   // Test Shortcut data
   const ShortcutTestData asciiFile =
-      ShortcutTestData('ASCII file path', 'test_file.lnk', 'C:\\test\\a.txt', FileSystemEntityType.file);
+      ShortcutTestData('ASCII file path', 'test_file.lnk', 'C:\\test\\a.txt', ShortcutResolverEntityType.file);
   const ShortcutTestData asciiDirectory =
-      ShortcutTestData('ASCII folder path', 'test_folder.lnk', 'C:\\test', FileSystemEntityType.directory);
-  const ShortcutTestData unicodeFile =
-      ShortcutTestData('Unicode file path', 'test_unicode_file.lnk', 'C:\\test\\☆.txt', FileSystemEntityType.file);
-  const ShortcutTestData unicodeDirectory =
-      ShortcutTestData('Unicode folder path', 'test_unicode_folder.lnk', 'C:\\test\\☆', FileSystemEntityType.directory);
+      ShortcutTestData('ASCII folder path', 'test_folder.lnk', 'C:\\test', ShortcutResolverEntityType.directory);
+  const ShortcutTestData unicodeFile = ShortcutTestData(
+      'Unicode file path', 'test_unicode_file.lnk', 'C:\\test\\☆.txt', ShortcutResolverEntityType.file);
+  const ShortcutTestData unicodeDirectory = ShortcutTestData(
+      'Unicode folder path', 'test_unicode_folder.lnk', 'C:\\test\\☆', ShortcutResolverEntityType.directory);
 
   const Iterable<ShortcutTestData> allShortcuts = [asciiFile, asciiDirectory, unicodeFile, unicodeDirectory];
   final Iterable<ShortcutTestData> fileShortcuts =
-      allShortcuts.where((element) => element.targetType == FileSystemEntityType.file);
+      allShortcuts.where((element) => element.targetType == ShortcutResolverEntityType.file);
   final Iterable<ShortcutTestData> folderShortcuts =
-      allShortcuts.where((element) => element.targetType == FileSystemEntityType.directory);
+      allShortcuts.where((element) => element.targetType == ShortcutResolverEntityType.directory);
 
   group('Shortcut Resolver Tests - Any Target', () {
     // Success Cases
@@ -43,7 +43,7 @@ void main() {
       test(shortcut.testTitle, () async {
         expect(
             ShortcutResolver.resolveTarget(await File(shortcut.shortcutPath).readAsBytes(),
-                targetType: FileSystemEntityType.file),
+                targetType: ShortcutResolverEntityType.file),
             shortcut.targetPath);
       });
     }
@@ -52,7 +52,7 @@ void main() {
       test(shortcut.testTitle, () async {
         expect(
             () async => ShortcutResolver.resolveTarget(await File(shortcut.shortcutPath).readAsBytes(),
-                targetType: FileSystemEntityType.file),
+                targetType: ShortcutResolverEntityType.file),
             throwsArgumentError);
       });
     }
@@ -64,7 +64,7 @@ void main() {
       test(shortcut.testTitle, () async {
         expect(
             ShortcutResolver.resolveTarget(await File(shortcut.shortcutPath).readAsBytes(),
-                targetType: FileSystemEntityType.directory),
+                targetType: ShortcutResolverEntityType.directory),
             shortcut.targetPath);
       });
     }
@@ -73,7 +73,7 @@ void main() {
       test(shortcut.testTitle, () async {
         expect(
             () async => ShortcutResolver.resolveTarget(await File(shortcut.shortcutPath).readAsBytes(),
-                targetType: FileSystemEntityType.directory),
+                targetType: ShortcutResolverEntityType.directory),
             throwsArgumentError);
       });
     }

@@ -26,14 +26,16 @@ const shellLinkGuidHexList = [
   0x46
 ];
 
-enum FileSystemEntityType { file, directory, any }
+/// A file system entity type that can be resolved from a shortcut.
+enum ShortcutResolverEntityType { file, directory, any }
 
 class ShortcutResolver {
   /// Resolves the target path linked by the Shell Link (Windows Shortcut) file.
   /// The [targetType] argument restricts what types of paths can be resolved.
   ///
   /// Throws an [ArgumentError] on failure.
-  static String resolveTarget(Uint8List bytes, {FileSystemEntityType targetType = FileSystemEntityType.any}) {
+  static String resolveTarget(Uint8List bytes,
+      {ShortcutResolverEntityType targetType = ShortcutResolverEntityType.any}) {
     // Shortcuts should be at least this long
     if (bytes.lengthInBytes < 0xff) throw ArgumentError('More data needed to attempt path resolution');
 
@@ -52,8 +54,8 @@ class ShortcutResolver {
     final bool linksToFile = fileAttributes & hasWorkingDirFlag < 1;
 
     // Do not attempt to resolve if the link points to the wrong entity type
-    if ((targetType == FileSystemEntityType.directory && linksToFile) ||
-        (targetType == FileSystemEntityType.file && !linksToFile)) {
+    if ((targetType == ShortcutResolverEntityType.directory && linksToFile) ||
+        (targetType == ShortcutResolverEntityType.file && !linksToFile)) {
       throw ArgumentError.value('Link points to invalid shortcut type. Expected: ${targetType.name}');
     }
 
@@ -79,14 +81,14 @@ extension ResolvableFile on File {
   /// [targetType] will only resolve if the path points to the given type
   ///
   /// Throws an [ArgumentError] on failure.
-  Future<String> resolveIfShortcut({FileSystemEntityType targetType = FileSystemEntityType.any}) async =>
+  Future<String> resolveIfShortcut({ShortcutResolverEntityType targetType = ShortcutResolverEntityType.any}) async =>
       ShortcutResolver.resolveTarget(await readAsBytes(), targetType: targetType);
 
   /// Resolves the target path linked by the Shell Link (Windows Shortcut) file
   /// [targetType] will only resolve if the path points to the given type
   ///
   /// Throws an [ArgumentError] on failure.
-  String resolveIfShortcutSync({FileSystemEntityType targetType = FileSystemEntityType.any}) =>
+  String resolveIfShortcutSync({ShortcutResolverEntityType targetType = ShortcutResolverEntityType.any}) =>
       ShortcutResolver.resolveTarget(readAsBytesSync(), targetType: targetType);
 }
 
