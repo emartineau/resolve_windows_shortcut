@@ -2,12 +2,12 @@ This package lets you resolve target paths of Windows Shortcut (.lnk) files.
 
 ## Getting Started
 
-Add `resolve_win_shortcut` as a depenency to `pubspec.yaml`.
+Add `resolve_windows_shortcut` as a depenency to `pubspec.yaml`.
 
 ## Basic Usage
 
 ```dart
-import 'package:resolve_win_shortcut/resolve_win_shortcut.dart';
+import 'package:resolve_windows_shortcut/resolve_windows_shortcut.dart';
 
 final File shortcut = File('C:\\ShortcutPath.lnk');
 final String resolvedShortcutPath = shortcut.resolveIfShortcut();

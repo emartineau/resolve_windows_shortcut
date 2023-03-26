@@ -1,7 +1,7 @@
 /// Contains functions and extensions that parse MS Shell Link (Windows Shorcut) files
 ///
 /// Implemented based on [the open spec of Shell Links.](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/16cb4ca1-9339-4d0c-a68d-bf1d6cc0f943)
-library resolve_win_shortcut;
+library resolve_windows_shortcut;
 
 import 'dart:io';
 import 'dart:typed_data';
