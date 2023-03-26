@@ -8,13 +8,13 @@ export 'src/resolve_win_shortcut_base.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
-extension DirectoryHelpers on Directory {
+extension ResolvableDirectory on Directory {
   /// Determines if the directory contains any entities that
   /// point to directories or are directories themselves
   Future<bool> hasSubDirectory() async {
     await for (final entity in list(recursive: false)) {
       if (entity is Directory ||
-          _getPathExtension(entity.path) == '.lnk' &&
+          _getPathExtension(entity.path) == 'lnk' &&
               await (entity as File).resolveIfShortcut(targetType: FileSystemEntityType.directory) != null) {
         return true;
       }
@@ -41,6 +41,9 @@ extension DirectoryHelpers on Directory {
       }
     }
   }
+
+  /// Get the extension of the given file path if it exists
+  String _getPathExtension(String path) => path.split(RegExp(r'[/\\]')).last.split('.').last;
 }
 
 /// Unique Identifier for Shell Link files in byte array form
@@ -119,7 +122,7 @@ class ShortcutResolver {
   }
 }
 
-extension FileHelpers on File {
+extension ResolvableFile on File {
   Future<String?> resolveIfShortcut({FileSystemEntityType targetType = FileSystemEntityType.any}) async =>
       ShortcutResolver.resolveTarget(await readAsBytes(), targetType: targetType);
 }
@@ -179,9 +182,6 @@ String _getNullTerminatedString(Uint8List bytes, int offset) {
     length++;
   }
 }
-
-/// Get the extension of the given file path if it exists
-String _getPathExtension(String path) => path.split(RegExp(r'[/\\]')).last.split('.').last;
 
 /// Compares 2 lists for equality in elements (via ==) and order
 bool _listEquals(List a, List b) {
