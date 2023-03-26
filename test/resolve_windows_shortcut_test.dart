@@ -3,79 +3,79 @@ import 'dart:io';
 import 'package:resolve_windows_shortcut/resolve_windows_shortcut.dart';
 import 'package:test/test.dart';
 
+class ShortcutTestData {
+  final String testTitle;
+  final String shortcutPath;
+  final String targetPath;
+  final FileSystemEntityType targetType;
+  const ShortcutTestData(this.testTitle, this.shortcutPath, this.targetPath, this.targetType);
+}
+
 void main() {
-  // Test Shell Link paths
-  const asciiFile = 'test_file.lnk';
-  const asciiDirectory = 'test_folder.lnk';
-  const unicodeFile = 'test_unicode_file.lnk';
-  const unicodeDirectory = 'test_unicode_folder.lnk';
+  // Test Shortcut data
+  const ShortcutTestData asciiFile =
+      ShortcutTestData('ASCII file path', 'test_file.lnk', 'C:\\test\\a.txt', FileSystemEntityType.file);
+  const ShortcutTestData asciiDirectory =
+      ShortcutTestData('ASCII folder path', 'test_folder.lnk', 'C:\\test', FileSystemEntityType.directory);
+  const ShortcutTestData unicodeFile =
+      ShortcutTestData('Unicode file path', 'test_unicode_file.lnk', 'C:\\test\\☆.txt', FileSystemEntityType.file);
+  const ShortcutTestData unicodeDirectory =
+      ShortcutTestData('Unicode folder path', 'test_unicode_folder.lnk', 'C:\\test\\☆', FileSystemEntityType.directory);
+
+  const Iterable<ShortcutTestData> allShortcuts = [asciiFile, asciiDirectory, unicodeFile, unicodeDirectory];
+  final Iterable<ShortcutTestData> fileShortcuts =
+      allShortcuts.where((element) => element.targetType == FileSystemEntityType.file);
+  final Iterable<ShortcutTestData> folderShortcuts =
+      allShortcuts.where((element) => element.targetType == FileSystemEntityType.directory);
 
   group('Shortcut Resolver Tests - Any Target', () {
-    test('ASCII file path', () async {
-      expect(ShortcutResolver.resolveTarget(await File(asciiFile).readAsBytes()), "C:\\test\\a.txt");
-    });
-    test('ASCII folder path', () async {
-      expect(ShortcutResolver.resolveTarget(await File(asciiDirectory).readAsBytes()), "C:\\test");
-    });
-    test('Unicode file path', () async {
-      expect(ShortcutResolver.resolveTarget(await File(unicodeFile).readAsBytes()), "C:\\test\\☆.txt");
-    });
-    test('Unicode folder path', () async {
-      expect(ShortcutResolver.resolveTarget(await File(unicodeDirectory).readAsBytes()), "C:\\test\\☆");
-    });
+    // Success Cases
+    for (ShortcutTestData shortcut in allShortcuts) {
+      test(shortcut.testTitle, () async {
+        expect(ShortcutResolver.resolveTarget(await File(shortcut.shortcutPath).readAsBytes()), shortcut.targetPath);
+      });
+    }
   });
 
   group('Shortcut Resolver - File Targets Only', () {
-    test('ASCII file path', () {
-      expect(
-          () async => ShortcutResolver.resolveTarget(await File(asciiFile).readAsBytes(),
-              targetType: FileSystemEntityType.file),
-          throwsArgumentError);
-    });
-    test('ASCII folder path', () async {
-      expect(
-          ShortcutResolver.resolveTarget(await File(asciiDirectory).readAsBytes(),
-              targetType: FileSystemEntityType.file),
-          "C:\\test");
-    });
-    test('Unicode file path', () {
-      expect(
-          () async => ShortcutResolver.resolveTarget(await File(unicodeFile).readAsBytes(),
-              targetType: FileSystemEntityType.file),
-          throwsArgumentError);
-    });
-    test('Unicode folder path', () async {
-      expect(
-          ShortcutResolver.resolveTarget(await File(unicodeDirectory).readAsBytes(),
-              targetType: FileSystemEntityType.file),
-          "C:\\test\\☆");
-    });
+    // Success Cases
+    for (ShortcutTestData shortcut in fileShortcuts) {
+      test(shortcut.testTitle, () async {
+        expect(
+            ShortcutResolver.resolveTarget(await File(shortcut.shortcutPath).readAsBytes(),
+                targetType: FileSystemEntityType.file),
+            shortcut.targetPath);
+      });
+    }
+    // Failure Cases
+    for (ShortcutTestData shortcut in folderShortcuts) {
+      test(shortcut.testTitle, () async {
+        expect(
+            () async => ShortcutResolver.resolveTarget(await File(shortcut.shortcutPath).readAsBytes(),
+                targetType: FileSystemEntityType.file),
+            throwsArgumentError);
+      });
+    }
   });
 
   group('Shortcut Resolver - Directory Targets Only', () {
-    test('ASCII file path', () async {
-      expect(
-          ShortcutResolver.resolveTarget(await File(asciiFile).readAsBytes(),
-              targetType: FileSystemEntityType.directory),
-          "C:\\test\\a.txt");
-    });
-    test('ASCII folder path', () {
-      expect(
-          () async => ShortcutResolver.resolveTarget(await File(asciiDirectory).readAsBytes(),
-              targetType: FileSystemEntityType.directory),
-          throwsArgumentError);
-    });
-    test('Unicode file path', () async {
-      expect(
-          ShortcutResolver.resolveTarget(await File(unicodeFile).readAsBytes(),
-              targetType: FileSystemEntityType.directory),
-          "C:\\test\\☆.txt");
-    });
-    test('Unicode folder path', () {
-      expect(
-          () async => ShortcutResolver.resolveTarget(await File(unicodeDirectory).readAsBytes(),
-              targetType: FileSystemEntityType.directory),
-          throwsArgumentError);
-    });
+    // Success Cases
+    for (ShortcutTestData shortcut in folderShortcuts) {
+      test(shortcut.testTitle, () async {
+        expect(
+            ShortcutResolver.resolveTarget(await File(shortcut.shortcutPath).readAsBytes(),
+                targetType: FileSystemEntityType.directory),
+            shortcut.targetPath);
+      });
+    }
+    // Failure Cases
+    for (ShortcutTestData shortcut in fileShortcuts) {
+      test(shortcut.testTitle, () async {
+        expect(
+            () async => ShortcutResolver.resolveTarget(await File(shortcut.shortcutPath).readAsBytes(),
+                targetType: FileSystemEntityType.directory),
+            throwsArgumentError);
+      });
+    }
   });
 }

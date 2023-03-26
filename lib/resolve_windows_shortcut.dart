@@ -50,11 +50,11 @@ class ShortcutResolver {
     // Attributes
     final int fileAttributes = bytes[fileAttributesOffset];
     const int hasWorkingDirFlag = 0x10; // E
-    final bool linksToDir = fileAttributes & hasWorkingDirFlag < 1;
+    final bool linksToFile = fileAttributes & hasWorkingDirFlag < 1;
 
     // Do not attempt to resolve if the link points to the wrong entity type
-    if ((targetType == FileSystemEntityType.directory && !linksToDir) ||
-        (targetType == FileSystemEntityType.file && linksToDir)) {
+    if ((targetType == FileSystemEntityType.directory && linksToFile) ||
+        (targetType == FileSystemEntityType.file && !linksToFile)) {
       throw ArgumentError.value('Link points to invalid shortcut type. Expected: ${targetType.name}');
     }
 
