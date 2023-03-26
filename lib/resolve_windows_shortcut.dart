@@ -45,7 +45,6 @@ class ShortcutResolver {
     // Flags
     final int shellLinkFlags = bytes[0x14];
     const int fileAttributesOffset = 0x18;
-    const int hasLocationInfoFlag = 0x02; // B
 
     // Attributes
     final int fileAttributes = bytes[fileAttributesOffset];
@@ -71,12 +70,6 @@ class ShortcutResolver {
     final int fileStart = shellOffset + shellLength;
     final bool isUnicodeTarget = (shellLinkFlags & isUnicodeFlag) > 0 &&
         ByteData.sublistView(bytes).getUint32(fileStart + 0x04, Endian.little) > 28;
-    // final bool hasLocationInfo = flags & hasLocationInfoFlag > 0;
-    // get the local volume and local system values
-    // const int basenameOffsetOffset = 0x10;
-    // const int finalnameOffsetOffset = 0x18;
-    // final int basenameOffset = rawContent[fileStart + basenameOffsetOffset] + fileStart;
-    // final int finalnameOffset = rawContent[fileStart + finalnameOffsetOffset] + fileStart;
     return _parseLnkTarget(bytes, fileStart, isUnicode: isUnicodeTarget);
   }
 }
@@ -108,9 +101,6 @@ String _parseLnkTarget(Uint8List bytes, int offset, {bool isUnicode = false}) {
 
   final Uint8List fromOffset = bytes.sublist(offset);
   final byteView = ByteData.view(fromOffset.buffer);
-  // final int stringLength = byteView.getUint32(offset + 0x00, Endian.little);
-  // final int locationFlagsOffset = byteView.getUint32(offset + 0x08, Endian.little);
-  // final int volumeInfoOffset = byteView.getUint32(offset + 0x0c, Endian.little);
   final int localPathOffset = byteView.getUint32(0x1c, Endian.little);
   final int remainingPathOffset = byteView.getUint32(0x20, Endian.little);
 
